@@ -1,10 +1,9 @@
-/* --- Global Styles & Sci-Fi Variables --- */
 :root {
-  --primary-glow: #00ffff; /* Cyan */
-  --secondary-glow: #ff00ff; /* Magenta */
-  --accent-glow: #ffff00; /* Yellow */
-  --bg-color: #0a0f1a; /* Very dark blue */
-  --card-bg: rgba(15, 32, 56, 0.8); /* Dark blue, semi-transparent */
+  --primary-glow: #00ffff;
+  --secondary-glow: #ff00ff;
+  --accent-glow: #ffff00;
+  --bg-color: #0a0f1a;
+  --card-bg: rgba(15, 32, 56, 0.8);
   --card-border: rgba(0, 255, 255, 0.3);
   --card-shadow: rgba(0, 255, 255, 0.2);
   --text-light: #e0f0ff;
@@ -17,7 +16,6 @@
   --glow-animation: glow 1.5s ease-in-out infinite alternate;
 }
 
-/* Keyframes (Keep existing ones: glow, pulse, scan-line) */
 @keyframes glow {
   from {
     text-shadow: 0 0 5px var(--primary-glow), 0 0 10px var(--primary-glow);
@@ -61,8 +59,19 @@
     left: 100%;
   }
 }
+@keyframes whack-active {
+  0% {
+    background-color: var(--error-color);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px var(--error-color);
+  }
+  100% {
+    background-color: var(--error-color);
+    transform: scale(1.1);
+    box-shadow: 0 0 10px var(--error-color);
+  }
+}
 
-/* Basic Styles (Keep existing: *, body, container, screen management) */
 * {
   margin: 0;
   padding: 0;
@@ -112,7 +121,6 @@ body {
   position: relative;
 }
 
-/* Sci-Fi Card (Keep existing) */
 .sci-fi-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -141,7 +149,6 @@ body {
   color: var(--text-medium);
 }
 
-/* Form Elements (Keep existing) */
 .input-group {
   margin-bottom: 25px;
   text-align: left;
@@ -189,7 +196,6 @@ body {
   opacity: 1;
 }
 
-/* Buttons (Keep existing) */
 .btn {
   display: inline-block;
   padding: 10px 20px;
@@ -251,7 +257,6 @@ body {
   animation: var(--glow-animation);
 }
 
-/* Game Screen Layout (Keep existing) */
 .game-header {
   display: flex;
   justify-content: space-between;
@@ -313,9 +318,8 @@ body {
 #game-screen > #resetProgressBtn {
   margin-top: 20px;
   align-self: flex-start;
-} /* Ensure button is styled correctly outside interface */
+}
 
-/* Star Map (Keep existing, maybe update background color as suggested before) */
 .star-map-container {
   flex: 3;
   background-color: rgba(0, 0, 0, 0.4);
@@ -395,7 +399,6 @@ body {
   animation: scan-line 1s linear infinite;
 }
 
-/* Console (Keep existing, added prefix styling as suggested before) */
 .console-container {
   flex: 2;
   background-color: rgba(0, 0, 0, 0.6);
@@ -487,7 +490,6 @@ body {
   color: var(--primary-glow);
 }
 
-/* --- Modals --- */
 .modal {
   display: none;
   position: fixed;
@@ -518,7 +520,6 @@ body {
   position: relative;
 }
 
-/* Instruction Modal Specifics */
 .instruction-modal .modal-content {
   max-width: 450px;
   padding: 25px;
@@ -551,11 +552,7 @@ body {
   color: var(--text-medium);
   font-size: 0.9em;
 }
-#proceedScanBtn {
-  /* Button already uses .btn styles, can add specifics if needed */
-}
 
-/* Mini-Game Modal Specifics */
 #minigame-title {
   color: var(--primary-glow);
   margin-bottom: 15px;
@@ -571,7 +568,8 @@ body {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-} /* Ensure column direction for games needing it */
+  width: 100%;
+}
 .feedback-message {
   margin-top: 15px;
   font-weight: bold;
@@ -584,7 +582,6 @@ body {
   color: var(--error-color);
 }
 
-/* --- Instruction Visual Examples --- */
 .visual-grid {
   display: grid;
   grid-template-columns: repeat(3, 20px);
@@ -642,9 +639,38 @@ body {
   color: #fff;
   border-radius: 5px;
 }
+.visual-math-problem {
+  font-weight: bold;
+  color: var(--accent-glow);
+}
+.visual-whack-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 25px);
+  gap: 5px;
+}
+.visual-whack-item {
+  width: 25px;
+  height: 25px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--card-border);
+}
+.visual-whack-item.active {
+  background-color: var(--error-color);
+}
+.visual-firewall-symbols {
+  display: flex;
+  gap: 5px;
+}
+.visual-firewall-symbol {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--card-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
 
-/* --- Mini-Game Specific Styles --- */
-/* Pattern Match */
 .pattern-display {
   margin-bottom: 10px;
   color: var(--text-medium);
@@ -670,7 +696,6 @@ body {
   background-color: var(--secondary-glow);
 }
 
-/* QTE */
 .qte-bar-container {
   width: 100%;
   height: 30px;
@@ -696,11 +721,11 @@ body {
   background-color: var(--error-color);
 }
 
-/* Sequence Memory */
 .sequence-colors {
   display: flex;
   gap: 10px;
   margin-bottom: 15px;
+  justify-content: center;
 }
 .sequence-color-btn {
   width: 40px;
@@ -732,7 +757,6 @@ body {
   border: 1px solid var(--card-border);
 }
 
-/* Rapid Click */
 .rapid-click-area {
   text-align: center;
 }
@@ -760,7 +784,115 @@ body {
   color: var(--text-medium);
 }
 
-/* Certificate Styling (Keep existing) */
+.mathlock-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+.mathlock-problem {
+  font-size: 1.3em;
+  font-weight: bold;
+  color: var(--accent-glow);
+  font-family: "Courier New", monospace;
+}
+.mathlock-input {
+  padding: 8px 12px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--card-border);
+  border-radius: 5px;
+  color: var(--text-light);
+  font-size: 1.1em;
+  width: 100px;
+  text-align: center;
+}
+.mathlock-input:focus {
+  outline: none;
+  border-color: var(--primary-glow);
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+
+.whack-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.whack-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 50px);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.whack-item {
+  width: 50px;
+  height: 50px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--card-border);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.1s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5em;
+  color: transparent;
+}
+.whack-item.active {
+  background-color: var(--error-color);
+  transform: scale(1.05);
+  box-shadow: 0 0 10px var(--error-color);
+  color: #fff;
+}
+.whack-item.hit {
+  background-color: var(--success-color);
+  transform: scale(0.9);
+  opacity: 0.5;
+}
+.whack-info {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  font-size: 0.9em;
+}
+
+.firewall-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+.firewall-target-sequence {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: var(--accent-glow);
+  font-family: "Courier New", monospace;
+  letter-spacing: 5px;
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 5px;
+}
+.firewall-user-input {
+  min-height: 2em;
+  font-size: 1.3em;
+  color: var(--primary-glow);
+  font-family: "Courier New", monospace;
+  letter-spacing: 5px;
+}
+.firewall-symbol-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.firewall-symbol-btn {
+  font-family: "Courier New", monospace;
+  font-size: 1.2em;
+  font-weight: bold;
+  width: 40px;
+  height: 40px;
+} /* Uses .btn styles */
+
 .sci-fi-cert {
   border: 1px solid var(--primary-glow);
   background: linear-gradient(145deg, #1a2a3a, #0a0f1a);
@@ -863,7 +995,6 @@ body {
   background-repeat: no-repeat;
 }
 
-/* Responsive Design (Keep existing) */
 @media (max-width: 768px) {
   .main-interface {
     flex-direction: column;
@@ -929,5 +1060,19 @@ body {
   .modal-content {
     width: 90%;
     padding: 20px;
+  }
+  .whack-grid {
+    grid-template-columns: repeat(3, 40px);
+    gap: 8px;
+  }
+  .whack-item {
+    width: 40px;
+    height: 40px;
+    font-size: 1.2em;
+  }
+  .firewall-symbol-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 1em;
   }
 }
