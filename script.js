@@ -1,3 +1,4 @@
+// --- DOM Elements ---
 const welcomeScreen = document.getElementById('welcome-screen');
 const gameScreen = document.getElementById('game-screen');
 const completionScreen = document.getElementById('completion-screen');
@@ -21,26 +22,45 @@ const certificatePreview = document.getElementById('certificate-preview');
 const downloadCertBtn = document.getElementById('downloadCertBtn');
 const startNewMissionBtn = document.getElementById('startNewMissionBtn');
 
+// Instruction Modal Elements
+const instructionModal = document.getElementById('instruction-modal');
+const instructionTitle = document.getElementById('instruction-title');
+const instructionText = document.getElementById('instruction-text');
+const instructionVisual = document.getElementById('instruction-visual');
+const proceedScanBtn = document.getElementById('proceedScanBtn');
+
+// Mini-Game Modal Elements
 const miniGameModal = document.getElementById('minigame-modal');
 const miniGameTitle = document.getElementById('minigame-title');
 const miniGameInstructions = document.getElementById('minigame-instructions');
 const miniGameArea = document.getElementById('minigame-area');
 const miniGameFeedback = document.getElementById('minigame-feedback');
-const closeModalBtn = document.getElementById('closeModalBtn');
 
+// --- jsPDF Setup ---
 const { jsPDF } = window.jspdf;
 
+// --- Game Configuration ---
 const TOTAL_SYSTEMS = 12;
 const SYSTEM_NAMES = ["Alpha Centauri", "Sirius", "Proxima Centauri", "Barnard's Star", "Wolf 359", "Lalande 21185", "Epsilon Eridani", "Tau Ceti", "Gliese 581", "Kepler-186f", "TRAPPIST-1", "Vega"];
-const MINIGAME_TYPES = ['pattern', 'qte'];
+const MINIGAME_TYPES = ['pattern', 'qte', 'sequence', 'rapidclick']; // Added new types
+const SEQUENCE_LENGTH = 5; // For sequence game
+const SEQUENCE_COLORS = ['#ff4136', '#0074d9', '#2ecc40', '#ffdc00', '#b10dc9']; // Red, Blue, Green, Yellow, Purple
+const RAPID_CLICK_TARGET = 15; // Clicks needed
+const RAPID_CLICK_TIME = 5; // Seconds allowed
 
+// --- Game State Variables ---
 let userName = '';
 let scannedSystems = {};
 let systemsData = [];
 let currentTargetSystem = null;
-let activeMiniGame = null;
+let activeMiniGame = { // Use an object to hold different timer types
+    timeoutId: null,
+    intervalId: null,
+    currentGameType: null // Store the type for the proceed button
+};
 let gameInProgress = false;
 
+// --- Functions ---
 
 function showScreen(screenToShow) {
     screens.forEach(screen => {
@@ -86,8 +106,8 @@ function updateProgress() {
                  if (icon) icon.className = 'fas fa-check-circle';
             } else {
                  sys.element.classList.remove('scanned');
-                 const icon = sys.element.querySelector('i');
-                 if (icon) icon.className = 'fas fa-question-circle';
+                  const icon = sys.element.querySelector('i');
+                  if (icon) icon.className = 'fas fa-question-circle';
             }
         }
     });
@@ -104,7 +124,8 @@ function saveProgress() {
         gameInProgress: gameInProgress
     };
     localStorage.setItem('cosmicCartographerState', JSON.stringify(gameState));
-     logMessage("Progress saved.", "system");
+     // Only log saving if the game is actually running to avoid spam on load
+     if(gameInProgress) logMessage("Progress saved.", "system");
 }
 
 function loadProgress() {
@@ -119,7 +140,7 @@ function loadProgress() {
             if (userName) {
                  userNameInput.value = userName;
             }
-            logMessage("Saved progress loaded.", "system");
+            // Don't log here, wait until initialization logic decides what to do
              return true;
         } catch (error) {
             logMessage("Error loading saved progress. Starting fresh.", "error");
@@ -131,30 +152,30 @@ function loadProgress() {
 }
 
 function resetGameData() {
-     userName = '';
      scannedSystems = {};
      systemsData = [];
      currentTargetSystem = null;
-     activeMiniGame = null;
-     gameInProgress = false;
+     clearActiveMiniGame(); // Ensure timers are cleared
+     gameInProgress = false; // Set game to inactive before potentially starting again
      starMapContainer.innerHTML = '<div class="map-background"></div>';
-     consoleOutput.innerHTML = '';
+     consoleOutput.innerHTML = ''; // Clear console only on full reset or new game start
      localStorage.removeItem('cosmicCartographerState');
      updateProgress();
 }
 
-
+// Modified function to handle starting/restarting the game interface
 function initializeGameInterface() {
     userDesignationDisplay.textContent = `Trainee: ${userName}`;
-    gameInProgress = true;
-    starMapContainer.innerHTML = '<div class="map-background"></div>';
-    consoleOutput.innerHTML = '';
+    gameInProgress = true; // Mark game as active *now*
+    // Clear previous state except maybe user name which is already set
     scannedSystems = {};
     systemsData = [];
-    generateStarMap();
+    starMapContainer.innerHTML = '<div class="map-background"></div>'; // Clear map
+    consoleOutput.innerHTML = ''; // Clear console for new mission
     logMessage(`Mission started for Trainee ${userName}. Begin scanning Sector 7G.`, "system");
-    updateProgress();
-    saveProgress();
+    generateStarMap(); // Generate new systems
+    updateProgress(); // Set progress bar to 0
+    saveProgress(); // Save initial state
     showScreen(gameScreen);
 }
 
@@ -183,18 +204,27 @@ function generateStarMap() {
         systemDiv.title = `Scan ${systemName}`;
 
         const icon = document.createElement('i');
-        icon.className = 'fas fa-question-circle';
+        // Set icon based on loaded state if applicable
+        icon.className = scannedSystems[systemId] ? 'fas fa-check-circle' : 'fas fa-question-circle';
         systemDiv.appendChild(icon);
 
-        const systemInfo = { id: systemId, name: systemName, element: systemDiv, scanned: false };
+        const systemInfo = { id: systemId, name: systemName, element: systemDiv, scanned: !!scannedSystems[systemId] };
         systemsData.push(systemInfo);
+
+        // Add scanned class if loaded from progress
+        if (systemInfo.scanned) {
+            systemDiv.classList.add('scanned');
+        }
 
         systemDiv.addEventListener('click', () => handleSystemClick(systemInfo));
         starMapContainer.appendChild(systemDiv);
     }
-     if(systemsData.length > 0) {
-        logMessage(`Generated ${TOTAL_SYSTEMS} target systems in Sector 7G.`, "system");
+     // Only log generation if actually starting a new game interface
+     // (Avoids duplicate message on load)
+     if(systemsData.length > 0 && !loadProgress.called) { // Need a flag or better logic here
+        // Let's log generation inside initializeGameInterface instead.
      }
+      loadProgress.called = false; // Reset flag
 }
 
 function handleSystemClick(systemInfo) {
@@ -206,8 +236,9 @@ function handleSystemClick(systemInfo) {
         logMessage(`System ${systemInfo.name} (${systemInfo.id}) already scanned. Data: ${scannedSystems[systemInfo.id].data}`, "info");
         return;
     }
-     if (miniGameModal.classList.contains('active')) {
-         logMessage("Scanning procedure already in progress.", "error");
+    // Check if any modal is already active
+     if (miniGameModal.classList.contains('active') || instructionModal.classList.contains('active')) {
+         logMessage("Procedure already in progress.", "error");
          return;
      }
 
@@ -216,46 +247,126 @@ function handleSystemClick(systemInfo) {
     systemInfo.element.classList.add('scanning');
 
     const gameType = MINIGAME_TYPES[Math.floor(Math.random() * MINIGAME_TYPES.length)];
+    activeMiniGame.currentGameType = gameType; // Store the upcoming game type
 
-    setTimeout(() => {
-        launchMiniGame(gameType);
-    }, 1500);
+    // Show instruction popup first
+    showInstructionPopup(gameType);
 }
+
+function showInstructionPopup(gameType) {
+    let instructions = '';
+    let visualHTML = '';
+
+    instructionTitle.innerHTML = `<i class="fas fa-info-circle"></i> Upcoming Scan: ${gameType.charAt(0).toUpperCase() + gameType.slice(1)} Calibration`;
+
+    switch (gameType) {
+        case 'pattern':
+            instructions = 'Memorize the highlighted pattern on the grid, then replicate it exactly.';
+            visualHTML = `
+                <span>Example:</span>
+                <div class="visual-grid">
+                    <div class="visual-cell"></div><div class="visual-cell highlight">X</div><div class="visual-cell"></div>
+                    <div class="visual-cell highlight">X</div><div class="visual-cell"></div><div class="visual-cell"></div>
+                    <div class="visual-cell"></div><div class="visual-cell"></div><div class="visual-cell highlight">X</div>
+                </div>`;
+            break;
+        case 'qte':
+            instructions = 'Press the button precisely when the moving indicator enters the highlighted target zone.';
+            visualHTML = `
+                <span>Example:</span>
+                <div class="visual-qte-bar">
+                    <span class="visual-qte-indicator">></span>
+                    <span class="visual-qte-target"></span>
+                      Target Zone
+                </div>`;
+            break;
+        case 'sequence':
+            instructions = `A sequence of ${SEQUENCE_LENGTH} colors will flash. Click the colored buttons in the same order.`;
+             visualHTML = `
+                <span>Example Input:</span>
+                <div class="visual-sequence">
+                    <div class="visual-sequence-item" style="background-color: ${SEQUENCE_COLORS[0]};"></div>
+                    <div class="visual-sequence-item" style="background-color: ${SEQUENCE_COLORS[1]};"></div>
+                    <div class="visual-sequence-item" style="background-color: ${SEQUENCE_COLORS[2]};"></div>
+                    ...
+                </div>`;
+            break;
+        case 'rapidclick':
+            instructions = `Click the target button ${RAPID_CLICK_TARGET} times before the timer runs out!`;
+            visualHTML = `
+                <span>Example:</span>
+                <div>
+                    <span class="visual-click-target">Click Me!</span>
+                    <span> / Time: 5.0s</span>
+                </div>`;
+            break;
+        default:
+            instructions = 'Prepare for an unknown calibration procedure.';
+            visualHTML = '<span>No visual example available.</span>';
+    }
+
+    instructionText.textContent = instructions;
+    instructionVisual.innerHTML = visualHTML;
+    instructionModal.classList.add('active');
+}
+
+// Event listener for the "Proceed" button in the instruction modal
+proceedScanBtn.onclick = () => {
+    instructionModal.classList.remove('active');
+    // Add a tiny delay to allow the instruction modal to fade slightly
+    setTimeout(() => {
+        if (activeMiniGame.currentGameType) {
+            launchMiniGame(activeMiniGame.currentGameType);
+        } else {
+            logMessage("Error: Could not determine scan type.", "error");
+             if (currentTargetSystem && currentTargetSystem.element) {
+                currentTargetSystem.element.classList.remove('scanning'); // Stop visual scan
+            }
+        }
+    }, 150); // 150ms delay
+};
+
 
 function launchMiniGame(type) {
     miniGameFeedback.textContent = '';
     miniGameFeedback.className = 'feedback-message';
     miniGameArea.innerHTML = '';
-    closeModalBtn.style.display = 'none';
 
     logMessage(`Scanner requires manual calibration. Procedure: ${type.toUpperCase()}`, "system");
 
-    if (type === 'pattern') {
-        setupPatternGame();
-    } else if (type === 'qte') {
-        setupQTEGame();
+    // Setup based on type
+    if (type === 'pattern') setupPatternGame();
+    else if (type === 'qte') setupQTEGame();
+    else if (type === 'sequence') setupSequenceGame();
+    else if (type === 'rapidclick') setupRapidClickGame();
+    else {
+        logMessage(`Unknown minigame type: ${type}`, "error");
+        handleMiniGameResult(false); // Fail instantly if game type is wrong
+        return;
     }
 
     miniGameModal.classList.add('active');
 }
 
-function handleMiniGameResult(success) {
+function clearActiveMiniGame() {
     if (activeMiniGame) {
         clearTimeout(activeMiniGame.timeoutId);
         clearInterval(activeMiniGame.intervalId);
-        activeMiniGame = null;
     }
+    activeMiniGame = { timeoutId: null, intervalId: null, currentGameType: null }; // Reset
+}
 
-
-    miniGameModal.classList.remove('active');
+function handleMiniGameResult(success) {
+    clearActiveMiniGame(); // Clear any running timers/intervals from the game
+    miniGameModal.classList.remove('active'); // Hide the main game modal
 
     if (currentTargetSystem && currentTargetSystem.element) {
-         currentTargetSystem.element.classList.remove('scanning');
+         currentTargetSystem.element.classList.remove('scanning'); // Stop scanning visual
 
         if (success) {
             const systemId = currentTargetSystem.id;
             const systemName = currentTargetSystem.name;
-            const scanData = `Anomalous energy readings detected. Possible ${['mineral deposits', 'gas giant', 'uninhabited planet', 'asteroid field', 'derelict vessel'][Math.floor(Math.random() * 5)]}.`;
+            const scanData = `Scan complete. Detected characteristics: ${['Stable Orbit', 'High Radiation', 'Trace Organics', 'Metallic Asteroids', 'Subspace Anomaly'][Math.floor(Math.random() * 5)]}.`;
 
             scannedSystems[systemId] = { name: systemName, data: scanData };
             const sysData = systemsData.find(s => s.id === systemId);
@@ -264,16 +375,19 @@ function handleMiniGameResult(success) {
             logMessage(`Scan successful for ${systemName}! ${scanData}`, "scan-success");
             saveProgress();
         } else {
-            logMessage(`Scan failed for ${currentTargetSystem.name}. Calibration required. Try again.`, "scan-fail");
+            logMessage(`Scan failed for ${currentTargetSystem.name}. Calibration unstable. Try again.`, "scan-fail");
         }
     } else {
+        // This case might happen if the user somehow closes things unexpectedly
         logMessage("Error: Target system lost during scan.", "error");
     }
 
-    currentTargetSystem = null;
-    updateProgress();
+    currentTargetSystem = null; // Clear target regardless of success/fail
+    updateProgress(); // Update UI and check for completion
 }
 
+
+// --- Mini-Game Implementations (Keep Pattern and QTE, add Sequence and RapidClick) ---
 
 function setupPatternGame() {
     miniGameTitle.textContent = 'Pattern Calibration';
@@ -285,11 +399,11 @@ function setupPatternGame() {
     `;
 
     const gridSize = 3;
-    const sequenceLength = 4;
+    const gameSequenceLength = 4; // Use a specific constant if needed
     let targetPattern = [];
     let userPattern = [];
 
-    while (targetPattern.length < sequenceLength) {
+    while (targetPattern.length < gameSequenceLength) {
         const randomIndex = Math.floor(Math.random() * (gridSize * gridSize));
         if (!targetPattern.includes(randomIndex)) {
             targetPattern.push(randomIndex);
@@ -298,7 +412,7 @@ function setupPatternGame() {
 
     const gridCells = [];
     const inputGrid = document.getElementById('pattern-input-grid');
-    if (!inputGrid) return;
+    if (!inputGrid) return handleMiniGameResult(false); // Safety check
     inputGrid.style.gridTemplateColumns = `repeat(${gridSize}, 40px)`;
 
     for (let i = 0; i < gridSize * gridSize; i++) {
@@ -312,28 +426,35 @@ function setupPatternGame() {
     let flashCount = 0;
     miniGameInstructions.textContent = 'Memorize the pattern...';
     inputGrid.style.pointerEvents = 'none';
+    clearActiveMiniGame(); // Clear previous before setting new
 
-    activeMiniGame = {};
     activeMiniGame.intervalId = setInterval(() => {
         if(flashCount >= targetPattern.length) {
             clearInterval(activeMiniGame.intervalId);
+            activeMiniGame.intervalId = null; // Mark as cleared
             miniGameInstructions.textContent = 'Now, replicate the pattern.';
             inputGrid.style.pointerEvents = 'auto';
              gridCells.forEach(cell => {
                  cell.onclick = () => {
                      const index = parseInt(cell.dataset.index);
-                     if (userPattern.length < sequenceLength && !userPattern.includes(index)) {
+                     if (userPattern.length < gameSequenceLength && !userPattern.includes(index)) {
                          userPattern.push(index);
                          cell.classList.add('user-selected');
-                         if(userPattern.length === sequenceLength) {
-                            document.getElementById('submitPatternBtn').style.opacity = 1;
-                            document.getElementById('submitPatternBtn').disabled = false;
+                         if(userPattern.length === gameSequenceLength) {
+                            const submitBtn = document.getElementById('submitPatternBtn');
+                            if(submitBtn) {
+                                submitBtn.style.opacity = 1;
+                                submitBtn.disabled = false;
+                            }
                          }
                      } else if (userPattern.includes(index)){
                         userPattern = userPattern.filter(item => item !== index);
                         cell.classList.remove('user-selected');
-                        document.getElementById('submitPatternBtn').style.opacity = 0.5;
-                        document.getElementById('submitPatternBtn').disabled = true;
+                        const submitBtn = document.getElementById('submitPatternBtn');
+                        if (submitBtn) {
+                            submitBtn.style.opacity = 0.5;
+                            submitBtn.disabled = true;
+                        }
                      }
                  };
              });
@@ -342,19 +463,21 @@ function setupPatternGame() {
                 submitBtn.style.opacity = 0.5;
                 submitBtn.disabled = true;
             }
-
              return;
         }
 
         const indexToFlash = targetPattern[flashCount];
         if (gridCells[indexToFlash]) {
             gridCells[indexToFlash].classList.add('active');
+            // Store timeout ID in the shared activeMiniGame object
             activeMiniGame.timeoutId = setTimeout(() => {
                  if(gridCells[indexToFlash]) gridCells[indexToFlash].classList.remove('active');
                  flashCount++;
+                 activeMiniGame.timeoutId = null; // Clear specific timeout ref
             }, 400);
         } else {
              clearInterval(activeMiniGame.intervalId);
+             activeMiniGame.intervalId = null;
         }
     }, 600);
 
@@ -369,6 +492,8 @@ function setupPatternGame() {
         };
         submitBtn.style.opacity = 0.5;
         submitBtn.disabled = true;
+     } else {
+        handleMiniGameResult(false); // Fail if button doesn't exist
      }
 }
 
@@ -386,7 +511,7 @@ function setupQTEGame() {
     const indicator = document.getElementById('qte-indicator');
     const target = document.getElementById('qte-target');
     const qteButton = document.getElementById('qte-button');
-    if(!indicator || !target || !qteButton) return;
+    if(!indicator || !target || !qteButton) return handleMiniGameResult(false);
 
     const targetWidth = Math.random() * 10 + 10;
     const targetLeft = Math.random() * (75 - targetWidth);
@@ -398,18 +523,20 @@ function setupQTEGame() {
 
     qteButton.disabled = false;
     let qtePressed = false;
-    activeMiniGame = {};
+    clearActiveMiniGame();
 
     qteButton.onclick = () => {
         if(qtePressed) return;
         qtePressed = true;
         qteButton.disabled = true;
         indicator.style.animationPlayState = 'paused';
-        clearTimeout(activeMiniGame.timeoutId);
+        clearTimeout(activeMiniGame.timeoutId); // Clear the timeout fail condition
+        activeMiniGame.timeoutId = null;
 
         const indicatorRect = indicator.getBoundingClientRect();
-        const targetRect = target.getBoundingClientRect();
          const containerRect = indicator.parentElement.getBoundingClientRect();
+         // Check if container has width, otherwise calculation is impossible
+         if (containerRect.width === 0) return handleMiniGameResult(false);
          const indicatorLeftPercent = ((indicatorRect.left - containerRect.left) / containerRect.width) * 100;
 
         const success = indicatorLeftPercent >= targetLeft && indicatorLeftPercent <= (targetLeft + targetWidth);
@@ -425,12 +552,151 @@ function setupQTEGame() {
              qteButton.disabled = true;
              miniGameFeedback.textContent = 'Calibration Timed Out!';
              miniGameFeedback.className = 'feedback-message error';
+             activeMiniGame.timeoutId = null; // Mark as cleared
              setTimeout(() => handleMiniGameResult(false), 1500);
         }
     }, animationDuration * 1000 + 100);
 }
 
+function setupSequenceGame() {
+    miniGameTitle.textContent = 'Sequence Memory Calibration';
+    miniGameInstructions.textContent = `Watch the ${SEQUENCE_LENGTH} color sequence, then click the buttons in the same order.`;
+    let colorButtonsHTML = '';
+    SEQUENCE_COLORS.forEach(color => {
+        colorButtonsHTML += `<button class="sequence-color-btn" data-color="${color}" style="background-color: ${color};"></button>`;
+    });
 
+    miniGameArea.innerHTML = `
+        <div id="sequence-display" class="sequence-display"></div>
+        <div class="sequence-colors">${colorButtonsHTML}</div>
+    `;
+
+    const displayArea = document.getElementById('sequence-display');
+    const colorButtons = miniGameArea.querySelectorAll('.sequence-color-btn');
+    if (!displayArea || colorButtons.length !== SEQUENCE_COLORS.length) return handleMiniGameResult(false);
+
+    let targetSequence = [];
+    let userSequence = [];
+
+    // Generate target sequence
+    for (let i = 0; i < SEQUENCE_LENGTH; i++) {
+        targetSequence.push(SEQUENCE_COLORS[Math.floor(Math.random() * SEQUENCE_COLORS.length)]);
+    }
+
+    // Flash the sequence
+    let flashIndex = 0;
+    miniGameInstructions.textContent = 'Memorize the sequence...';
+    colorButtons.forEach(btn => btn.disabled = true); // Disable buttons during flash
+    clearActiveMiniGame();
+
+    activeMiniGame.intervalId = setInterval(() => {
+        if (flashIndex >= targetSequence.length) {
+            clearInterval(activeMiniGame.intervalId);
+            activeMiniGame.intervalId = null;
+            displayArea.innerHTML = ''; // Clear display after flashing
+            miniGameInstructions.textContent = 'Now, repeat the sequence.';
+            colorButtons.forEach(btn => btn.disabled = false); // Enable buttons
+            return;
+        }
+
+        displayArea.innerHTML = `<div class="sequence-display-item" style="background-color: ${targetSequence[flashIndex]};"></div>`;
+        flashIndex++;
+
+        // Brief pause to see the color, then clear for the next flash (or end)
+        activeMiniGame.timeoutId = setTimeout(() => {
+            if (flashIndex < targetSequence.length) { // Only clear if not the last item
+                 displayArea.innerHTML = '';
+            }
+            activeMiniGame.timeoutId = null;
+        }, 500); // Time color is shown
+
+    }, 800); // Time between flashes
+
+    // Add button listeners
+    colorButtons.forEach(btn => {
+        btn.onclick = () => {
+            const clickedColor = btn.dataset.color;
+            userSequence.push(clickedColor);
+            // Optional: Visual feedback for click? (e.g., brief scale)
+            btn.style.transform = 'scale(1.1)';
+            setTimeout(() => btn.style.transform = 'scale(1)', 150);
+
+            // Check if sequence is wrong *immediately* or wait till the end? Let's wait.
+            if (userSequence.length === targetSequence.length) {
+                // Sequence complete, disable buttons and check
+                colorButtons.forEach(b => b.disabled = true);
+                const success = JSON.stringify(targetSequence) === JSON.stringify(userSequence);
+                miniGameFeedback.textContent = success ? 'Sequence Matched!' : 'Sequence Incorrect!';
+                miniGameFeedback.className = `feedback-message ${success ? 'success' : 'error'}`;
+                setTimeout(() => handleMiniGameResult(success), success ? 1000 : 1500);
+            }
+        };
+    });
+}
+
+function setupRapidClickGame() {
+    miniGameTitle.textContent = 'Power Surge Calibration';
+    miniGameInstructions.textContent = `Click the button ${RAPID_CLICK_TARGET} times in ${RAPID_CLICK_TIME} seconds!`;
+    miniGameArea.innerHTML = `
+        <div class="rapid-click-area">
+            <button id="clickTargetBtn">Click Fast!</button>
+            <div id="clickTimer">${RAPID_CLICK_TIME.toFixed(1)}s</div>
+            <div id="clickCounter">Clicks: 0 / ${RAPID_CLICK_TARGET}</div>
+        </div>
+    `;
+
+    const targetButton = document.getElementById('clickTargetBtn');
+    const timerDisplay = document.getElementById('clickTimer');
+    const counterDisplay = document.getElementById('clickCounter');
+    if(!targetButton || !timerDisplay || !counterDisplay) return handleMiniGameResult(false);
+
+    let clicks = 0;
+    let timeLeft = RAPID_CLICK_TIME;
+    targetButton.disabled = false;
+    clearActiveMiniGame();
+
+    targetButton.onclick = () => {
+        clicks++;
+        counterDisplay.textContent = `Clicks: ${clicks} / ${RAPID_CLICK_TARGET}`;
+        // Optional: Visual feedback on click
+        targetButton.style.transform = 'scale(1.05)';
+        setTimeout(()=> targetButton.style.transform = 'scale(1)', 50);
+
+        if (clicks >= RAPID_CLICK_TARGET) {
+            // Target reached!
+            clearInterval(activeMiniGame.intervalId);
+            activeMiniGame.intervalId = null;
+            targetButton.disabled = true;
+            miniGameFeedback.textContent = 'Power Stabilized!';
+            miniGameFeedback.className = 'feedback-message success';
+            setTimeout(() => handleMiniGameResult(true), 1000);
+        }
+    };
+
+    // Start the timer
+    activeMiniGame.intervalId = setInterval(() => {
+        timeLeft -= 0.1;
+        timerDisplay.textContent = `${timeLeft.toFixed(1)}s`;
+
+        if (timeLeft <= 0) {
+            clearInterval(activeMiniGame.intervalId);
+            activeMiniGame.intervalId = null;
+            targetButton.disabled = true;
+            // Check if target was met JUST as time ran out
+            if (clicks >= RAPID_CLICK_TARGET) {
+                 miniGameFeedback.textContent = 'Power Stabilized!';
+                 miniGameFeedback.className = 'feedback-message success';
+                 setTimeout(() => handleMiniGameResult(true), 1000);
+            } else {
+                 miniGameFeedback.textContent = 'Insufficient Power Output!';
+                 miniGameFeedback.className = 'feedback-message error';
+                 setTimeout(() => handleMiniGameResult(false), 1500);
+            }
+        }
+    }, 100);
+}
+
+// --- Mission Completion ---
 function completeMission() {
     gameInProgress = false;
     logMessage("All systems mapped! Mission successful!", "system");
@@ -441,16 +707,16 @@ function completeMission() {
     const dateString = today.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     certDate.textContent = `On Stardate ${today.getFullYear()}.${String(today.getMonth() + 1).padStart(2, '0')}.${String(today.getDate()).padStart(2, '0')} (Earth Date: ${dateString})`;
 
-    // Only save progress *if* mission was successfully completed by reaching this state
     if(Object.keys(scannedSystems).length === TOTAL_SYSTEMS) {
-         saveProgress();
+         saveProgress(); // Save final completed state
     }
 
     showScreen(completionScreen);
 }
 
 
-async function downloadCertificate() {
+// --- Certificate Download (Keep existing) ---
+async function downloadCertificate() { /* ... same as before ... */
     logMessage("Generating certificate PDF...", "system");
     certificatePreview.style.transform = 'scale(1.1)';
     certificatePreview.style.transformOrigin = 'top left';
@@ -504,42 +770,46 @@ async function downloadCertificate() {
     }
 }
 
-
+// --- Initialization and Event Listeners ---
 function initializeApp() {
+     loadProgress.called = true; // Set flag to prevent duplicate log on load
      const loaded = loadProgress();
 
      if (loaded && gameInProgress) {
          logMessage("Resuming mission...", "system");
          userDesignationDisplay.textContent = `Trainee: ${userName}`;
-         generateStarMap();
-         updateProgress();
+         generateStarMap(); // Regenerate map visuals
+         updateProgress(); // Update progress bar and system states
          showScreen(gameScreen);
      } else if (loaded && !gameInProgress && Object.keys(scannedSystems).length === TOTAL_SYSTEMS) {
          logMessage("Mission already completed. Displaying certificate.", "system");
-          completeMission();
+          completeMission(); // Populate and show certificate
      }
       else {
-          resetGameData();
+          // Covers: No saved state, failed load, or saved state was incomplete & not in progress
+          resetGameData(); // Ensure clean slate
           logMessage("Ready for new mission.", "system");
           showScreen(welcomeScreen);
       }
 
+    // Event Listeners
     startMissionBtn.addEventListener('click', () => {
         if (validateName()) {
             userName = userNameInput.value.trim();
-            initializeGameInterface();
+            // Don't reset game data here, initializeGameInterface handles clearing for a new game
+            initializeGameInterface(); // Setup and show game screen
         }
     });
 
     resetProgressBtn.addEventListener('click', () => {
-        if (confirm("Are you sure you want to reset all progress for this mission?")) {
-             logMessage("Mission progress has been reset.", "system");
-             // Keep the current user name, but reset game state
+        if (confirm("Are you sure you want to reset all progress for this mission? This cannot be undone.")) {
+             logMessage("Mission progress has been reset by user.", "system");
              const currentUserName = userName; // Save current name
-             resetGameData(); // Clears name internally
+             resetGameData(); // Clears name internally too
              userName = currentUserName; // Restore name
-             userNameInput.value = userName; // Update input field too
-             initializeGameInterface(); // Start a fresh game interface with the same name
+             userNameInput.value = userName; // Update input field
+             // Start a fresh game interface immediately
+             initializeGameInterface();
         }
     });
 
@@ -547,8 +817,8 @@ function initializeApp() {
     downloadCertBtn.addEventListener('click', downloadCertificate);
 
     startNewMissionBtn.addEventListener('click', () => {
-         resetGameData();
-         userNameInput.value = '';
+         resetGameData(); // Fully reset everything
+         userNameInput.value = ''; // Clear name input field
          logMessage("Ready for new mission.", "system");
          showScreen(welcomeScreen);
     });
@@ -562,4 +832,5 @@ function initializeApp() {
 
 }
 
+// --- Start the App ---
 initializeApp();
