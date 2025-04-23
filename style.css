@@ -1,9 +1,10 @@
+/* --- Global Styles & Sci-Fi Variables --- */
 :root {
-  --primary-glow: #00ffff;
-  --secondary-glow: #ff00ff;
-  --accent-glow: #ffff00;
-  --bg-color: #0a0f1a;
-  --card-bg: rgba(15, 32, 56, 0.8);
+  --primary-glow: #00ffff; /* Cyan */
+  --secondary-glow: #ff00ff; /* Magenta */
+  --accent-glow: #ffff00; /* Yellow */
+  --bg-color: #0a0f1a; /* Very dark blue */
+  --card-bg: rgba(15, 32, 56, 0.8); /* Dark blue, semi-transparent */
   --card-border: rgba(0, 255, 255, 0.3);
   --card-shadow: rgba(0, 255, 255, 0.2);
   --text-light: #e0f0ff;
@@ -16,6 +17,7 @@
   --glow-animation: glow 1.5s ease-in-out infinite alternate;
 }
 
+/* Keyframes (Keep existing ones: glow, pulse, scan-line) */
 @keyframes glow {
   from {
     text-shadow: 0 0 5px var(--primary-glow), 0 0 10px var(--primary-glow);
@@ -27,7 +29,6 @@
     box-shadow: 0 0 20px var(--card-shadow), 0 0 5px inset var(--card-shadow);
   }
 }
-
 @keyframes pulse {
   0% {
     transform: scale(1);
@@ -42,7 +43,6 @@
     box-shadow: 0 0 3px var(--primary-glow);
   }
 }
-
 @keyframes scan-line {
   0% {
     top: 0;
@@ -53,13 +53,21 @@
     opacity: 0;
   }
 }
+@keyframes qte-move {
+  0% {
+    left: 0%;
+  }
+  100% {
+    left: 100%;
+  }
+}
 
+/* Basic Styles (Keep existing: *, body, container, screen management) */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
-
 body {
   font-family: var(--font-family);
   background-color: var(--bg-color);
@@ -81,13 +89,11 @@ body {
   padding: 20px;
   overflow-x: hidden;
 }
-
 .container {
   width: 100%;
   max-width: 1000px;
   position: relative;
 }
-
 .screen {
   display: none;
   opacity: 0;
@@ -106,6 +112,7 @@ body {
   position: relative;
 }
 
+/* Sci-Fi Card (Keep existing) */
 .sci-fi-card {
   background: var(--card-bg);
   border: 1px solid var(--card-border);
@@ -134,6 +141,7 @@ body {
   color: var(--text-medium);
 }
 
+/* Form Elements (Keep existing) */
 .input-group {
   margin-bottom: 25px;
   text-align: left;
@@ -167,7 +175,6 @@ body {
 .input-group input[type="text"]::placeholder {
   color: rgba(224, 240, 255, 0.5);
 }
-
 .error-message {
   color: var(--error-color);
   font-size: 0.9em;
@@ -182,6 +189,7 @@ body {
   opacity: 1;
 }
 
+/* Buttons (Keep existing) */
 .btn {
   display: inline-block;
   padding: 10px 20px;
@@ -199,7 +207,6 @@ body {
 .btn i {
   margin-right: 8px;
 }
-
 .btn-primary {
   background-color: var(--primary-glow);
   color: var(--text-dark);
@@ -244,6 +251,7 @@ body {
   animation: var(--glow-animation);
 }
 
+/* Game Screen Layout (Keep existing) */
 .game-header {
   display: flex;
   justify-content: space-between;
@@ -264,7 +272,6 @@ body {
   font-size: 0.9em;
   color: var(--text-medium);
 }
-
 .progress-tracker {
   text-align: right;
 }
@@ -293,7 +300,6 @@ body {
   transition: width 0.5s ease-out;
   border-radius: 4px;
 }
-
 .main-interface {
   display: flex;
   gap: 20px;
@@ -304,7 +310,12 @@ body {
   border-radius: 0 0 8px 8px;
   min-height: 450px;
 }
+#game-screen > #resetProgressBtn {
+  margin-top: 20px;
+  align-self: flex-start;
+} /* Ensure button is styled correctly outside interface */
 
+/* Star Map (Keep existing, maybe update background color as suggested before) */
 .star-map-container {
   flex: 3;
   background-color: rgba(0, 0, 0, 0.4);
@@ -318,7 +329,6 @@ body {
   padding: 20px;
   align-content: start;
 }
-
 .map-background {
   position: absolute;
   top: 0;
@@ -330,10 +340,9 @@ body {
   pointer-events: none;
   z-index: 0;
 }
-
 .star-system {
   aspect-ratio: 1 / 1;
-  background-color: rgba(30, 40, 60, 0.8); /* Darker background */
+  background-color: rgba(30, 40, 60, 0.8);
   border-radius: 50%;
   display: flex;
   justify-content: center;
@@ -349,7 +358,7 @@ body {
   color: var(--accent-glow);
   opacity: 0.7;
 }
-.star-system:hover {
+.star-system:hover:not(.scanned) {
   background-color: rgba(0, 255, 255, 0.2);
   border-color: var(--primary-glow);
   transform: scale(1.1);
@@ -369,7 +378,6 @@ body {
   transform: scale(1);
   box-shadow: none;
 }
-
 .star-system.scanning::after {
   content: "";
   position: absolute;
@@ -387,6 +395,7 @@ body {
   animation: scan-line 1s linear infinite;
 }
 
+/* Console (Keep existing, added prefix styling as suggested before) */
 .console-container {
   flex: 2;
   background-color: rgba(0, 0, 0, 0.6);
@@ -428,7 +437,6 @@ body {
   border-radius: 4px;
   border: 1px solid rgba(0, 0, 0, 0.5);
 }
-
 .console-message {
   margin-bottom: 8px;
   padding-left: 10px;
@@ -436,15 +444,13 @@ body {
   position: relative;
 }
 .console-message::before {
-  /* Custom prefix indicator */
   content: "|";
   position: absolute;
   left: 0;
   top: 0;
   font-weight: bold;
-  color: transparent; /* Hide default char */
+  color: transparent;
 }
-
 .console-message.system {
   color: var(--secondary-glow);
   border-left-color: var(--secondary-glow);
@@ -481,11 +487,7 @@ body {
   color: var(--primary-glow);
 }
 
-#game-screen > #resetProgressBtn {
-  margin-top: 20px;
-  align-self: flex-start;
-}
-
+/* --- Modals --- */
 .modal {
   display: none;
   position: fixed;
@@ -515,6 +517,45 @@ body {
   text-align: center;
   position: relative;
 }
+
+/* Instruction Modal Specifics */
+.instruction-modal .modal-content {
+  max-width: 450px;
+  padding: 25px;
+  border-color: var(--accent-glow);
+}
+#instruction-title {
+  color: var(--accent-glow);
+  margin-bottom: 15px;
+  font-size: 1.2em;
+}
+#instruction-title i {
+  margin-right: 8px;
+}
+#instruction-text {
+  color: var(--text-light);
+  margin-bottom: 20px;
+  font-size: 0.95em;
+}
+.instruction-visual-area {
+  min-height: 60px;
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--card-border);
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: "Courier New", monospace;
+  color: var(--text-medium);
+  font-size: 0.9em;
+}
+#proceedScanBtn {
+  /* Button already uses .btn styles, can add specifics if needed */
+}
+
+/* Mini-Game Modal Specifics */
 #minigame-title {
   color: var(--primary-glow);
   margin-bottom: 15px;
@@ -530,7 +571,7 @@ body {
   justify-content: center;
   align-items: center;
   flex-direction: column;
-}
+} /* Ensure column direction for games needing it */
 .feedback-message {
   margin-top: 15px;
   font-weight: bold;
@@ -542,12 +583,68 @@ body {
 .feedback-message.error {
   color: var(--error-color);
 }
-#closeModalBtn {
+
+/* --- Instruction Visual Examples --- */
+.visual-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 20px);
+  gap: 3px;
+}
+.visual-cell {
+  width: 20px;
+  height: 20px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--card-border);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.8em;
+}
+.visual-cell.highlight {
+  background-color: var(--accent-glow);
+  color: var(--text-dark);
+}
+.visual-qte-bar {
+  width: 150px;
+  height: 15px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--card-border);
+  position: relative;
+  font-size: 0.8em;
+  line-height: 15px;
+}
+.visual-qte-bar span {
   position: absolute;
-  top: 10px;
-  right: 10px;
+}
+.visual-qte-target {
+  background-color: rgba(0, 255, 128, 0.5);
+  height: 100%;
+  width: 20%;
+  left: 60%;
+}
+.visual-qte-indicator {
+  color: var(--error-color);
+  left: 25%;
+}
+.visual-sequence {
+  display: flex;
+  gap: 5px;
+}
+.visual-sequence-item {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
+}
+.visual-click-target {
+  padding: 5px 10px;
+  background-color: var(--secondary-glow);
+  color: #fff;
+  border-radius: 5px;
 }
 
+/* --- Mini-Game Specific Styles --- */
+/* Pattern Match */
 .pattern-display {
   margin-bottom: 10px;
   color: var(--text-medium);
@@ -573,6 +670,7 @@ body {
   background-color: var(--secondary-glow);
 }
 
+/* QTE */
 .qte-bar-container {
   width: 100%;
   height: 30px;
@@ -597,15 +695,72 @@ body {
   width: 5px;
   background-color: var(--error-color);
 }
-@keyframes qte-move {
-  0% {
-    left: 0%;
-  }
-  100% {
-    left: 100%;
-  }
+
+/* Sequence Memory */
+.sequence-colors {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+.sequence-color-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--card-border);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.sequence-color-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 8px #fff;
+}
+.sequence-display {
+  margin-bottom: 15px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.sequence-display-item {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  border: 1px solid var(--card-border);
 }
 
+/* Rapid Click */
+.rapid-click-area {
+  text-align: center;
+}
+#clickTargetBtn {
+  padding: 20px 40px;
+  font-size: 1.2em;
+  background-color: var(--secondary-glow);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.1s;
+  margin-bottom: 15px;
+}
+#clickTargetBtn:active {
+  transform: scale(0.95);
+}
+#clickTimer {
+  font-size: 1.5em;
+  color: var(--accent-glow);
+  margin-bottom: 5px;
+}
+#clickCounter {
+  font-size: 1em;
+  color: var(--text-medium);
+}
+
+/* Certificate Styling (Keep existing) */
 .sci-fi-cert {
   border: 1px solid var(--primary-glow);
   background: linear-gradient(145deg, #1a2a3a, #0a0f1a);
@@ -619,7 +774,6 @@ body {
   position: relative;
   border-radius: 5px;
 }
-
 .cert-border-overlay {
   position: absolute;
   top: 10px;
@@ -631,7 +785,6 @@ body {
   opacity: 0.5;
   pointer-events: none;
 }
-
 .cert-header {
   border-bottom: 1px solid var(--card-border);
   padding-bottom: 15px;
@@ -651,7 +804,6 @@ body {
   color: var(--secondary-glow);
   opacity: 0.8;
 }
-
 .cert-body {
   margin-bottom: 30px;
 }
@@ -687,7 +839,6 @@ body {
   color: var(--text-medium);
   margin-bottom: 0 !important;
 }
-
 .cert-footer {
   border-top: 1px solid var(--card-border);
   padding-top: 15px;
@@ -712,6 +863,7 @@ body {
   background-repeat: no-repeat;
 }
 
+/* Responsive Design (Keep existing) */
 @media (max-width: 768px) {
   .main-interface {
     flex-direction: column;
@@ -755,7 +907,6 @@ body {
     bottom: 10px;
   }
 }
-
 @media (max-width: 480px) {
   body {
     padding: 10px;
