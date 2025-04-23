@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Cartographer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+
+        <section id="welcome-screen" class="screen active">
+            <div class="card sci-fi-card">
+                <h1><i class="fas fa-user-astronaut"></i> Welcome, Trainee!</h1>
+                <p>Enter your designation to begin your cartography mission in Sector 7G.</p>
+                <div class="input-group">
+                    <label for="userName"><i class="fas fa-id-badge"></i> Your Designation:</label>
+                    <input type="text" id="userName" placeholder="e.g., Cartographer Lex">
+                </div>
+                <button id="startMissionBtn" class="btn btn-primary btn-glow">
+                    <i class="fas fa-rocket"></i> Begin Mission
+                </button>
+                 <p id="nameError" class="error-message"></p>
+            </div>
+        </section>
+
+        <section id="game-screen" class="screen">
+            <header class="game-header">
+                <h2><i class="fas fa-satellite-dish"></i> Sector 7G Cartography Mission</h2>
+                <div class="progress-tracker">
+                    <span id="progress-text">Systems Scanned: 0 / 0</span>
+                    <div class="progress-bar-container">
+                        <div id="progress-bar" class="progress-bar"></div>
+                    </div>
+                </div>
+                 <div id="user-designation">Trainee: Loading...</div>
+            </header>
+            <div class="main-interface">
+                <div id="star-map" class="star-map-container">
+                     <div class="map-background"></div>
+                </div>
+                <div id="console" class="console-container">
+                    <h3>>_ Mission Log</h3>
+                    <div id="console-output" class="console-output">
+                        <p class="console-message system">Initializing scanner...</p>
+                    </div>
+                </div>
+            </div>
+             <button id="resetProgressBtn" class="btn btn-danger btn-small">
+                 <i class="fas fa-undo"></i> Reset Progress
+             </button>
+        </section>
+
+        <section id="completion-screen" class="screen">
+             <div class="card sci-fi-card">
+                 <h2><i class="fas fa-award"></i> Mission Accomplished!</h2>
+                 <p>Outstanding work, <span id="cert-userName-display">Cartographer</span>! Sector 7G is fully mapped.</p>
+                 <p>Your official certificate:</p>
+
+                 <div id="certificate-preview" class="certificate sci-fi-cert">
+                    <div class="cert-border-overlay"></div>
+                    <div class="cert-header">
+                        <i class="fas fa-atom cert-icon"></i>
+                        <h1>Cosmic Cartographer Certificate</h1>
+                        <i class="fas fa-atom cert-icon"></i>
+                    </div>
+                    <div class="cert-body">
+                        <p class="presented-to">This certifies that</p>
+                        <p class="cert-name" id="cert-name">Designation Here</p>
+                        <p class="achievement-text">Has successfully surveyed and mapped all primary systems within</p>
+                        <p class="sector-name">Sector 7G</p>
+                        <p class="cert-date" id="cert-date">On Stardate [Date Here]</p>
+                    </div>
+                    <div class="cert-footer">
+                        <p>Signed: Galactic Cartography Guild <i class="fas fa-signature"></i></p>
+                         <div class="cert-seal"></div>
+                    </div>
+                </div>
+
+                <button id="downloadCertBtn" class="btn btn-secondary btn-glow">
+                    <i class="fas fa-download"></i> Download Certificate (PDF)
+                </button>
+                <button id="startNewMissionBtn" class="btn btn-tertiary">
+                    <i class="fas fa-redo"></i> Start New Mission
+                </button>
+            </div>
+        </section>
+
+        <div id="minigame-modal" class="modal">
+            <div class="modal-content">
+                <h3 id="minigame-title">Scanning Procedure</h3>
+                <p id="minigame-instructions">Follow the instructions to complete the scan.</p>
+                <div id="minigame-area">
+
+                </div>
+                <p id="minigame-feedback" class="feedback-message"></p>
+                <button id="closeModalBtn" class="btn btn-danger btn-small" style="display: none;">Close</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha512-qZvrmS2ekKPF2mSznTQsxqPgnpkI4DNTlrdUmTzrDgektczlKNRRhy5X5AAOnx5S09ydFYWWNSfcEqDTTHgtNA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="script.js"></script>
+</body>
+</html>
